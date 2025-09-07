@@ -141,7 +141,7 @@ class YahooFinanceNewsFeed {
     
     public function per_page_callback() {
         $options = get_option('yfnf_settings');
-        $value = isset($options['per_page']) ? $options['per_page'] : 20;
+        $value = isset($options['per_page']) ? $options['per_page'] : 30;
         echo '<input type="number" name="yfnf_settings[per_page]" value="' . esc_attr($value) . '" min="1" max="100" />';
         echo '<p class="description">Number of news items per page</p>';
     }
@@ -209,8 +209,8 @@ class YahooFinanceNewsFeed {
             </form>
             <div class="yfnf-usage-info">
                 <h2>Usage</h2>
-                <h3>Shortcode:</h3>
-                <code>[yahoo_news_feed symbol="AAPL" per_page="20" page="1" show_read_more="no" content_mode="full"]</code>
+                <h3>Sample Shortcode:</h3>
+                <code>[yahoo_news_feed symbol="AAPL" per_page="30" page="1" show_read_more="no" content_mode="full"]</code>
                 <h3>Parameters:</h3>
                 <ul>
                     <li><strong>symbol</strong>: Stock symbol (default: setting value)</li>
@@ -232,7 +232,7 @@ public function shortcode_handler($atts) {
     
     $atts = shortcode_atts(array(
         'symbol' => isset($options['default_symbol']) ? $options['default_symbol'] : 'AAPL',
-        'per_page' => isset($options['per_page']) ? $options['per_page'] : 20,
+        'per_page' => isset($options['per_page']) ? $options['per_page'] : 30,
         'page' => 1,
         'style' => isset($options['accordion_style']) ? $options['accordion_style'] : 'default',
         'show_read_more' => isset($options['show_read_more']) ? $options['show_read_more'] : 'no',
@@ -602,7 +602,7 @@ public function shortcode_handler($atts) {
         // Set default options
         $default_options = array(
             'default_symbol' => 'AAPL',
-            'per_page' => 20,
+            'per_page' => 30,
             'cache_time' => 15,
             'alphavantage_key' => '',
             'accordion_style' => 'default',
@@ -694,7 +694,7 @@ add_action('rest_api_init', function() {
                 'sanitize_callback' => array('YFNF_Utils', 'sanitize_symbol'),
             ),
             'per_page' => array(
-                'default' => 20,
+                'default' => 30,
                 'sanitize_callback' => 'absint',
             ),
             'page' => array(

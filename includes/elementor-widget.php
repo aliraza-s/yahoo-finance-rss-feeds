@@ -68,7 +68,7 @@ class YFNF_Elementor_Widget extends \Elementor\Widget_Base {
             [
                 'label' => __('Items Per Page', 'yahoo-finance-news'),
                 'type' => \Elementor\Controls_Manager::NUMBER,
-                'default' => 20,
+                'default' => 30,
                 'min' => 1,
                 'max' => 100,
                 'step' => 1,
@@ -1045,7 +1045,7 @@ class YFNF_Elementor_Widget extends \Elementor\Widget_Base {
         // Prepare arguments with all settings
         $args = array(
             'symbol' => !empty($settings['symbol']) ? YFNF_Utils::sanitize_symbol($settings['symbol']) : 'AAPL',
-        'per_page' => !empty($settings['per_page']) ? absint($settings['per_page']) : 20,
+        'per_page' => !empty($settings['per_page']) ? absint($settings['per_page']) : 30,
         'page' => 1,
             'style' => !empty($settings['accordion_style']) ? $settings['accordion_style'] : 'default',
             'show_source' => $settings['show_source'] === 'yes',
@@ -1095,7 +1095,7 @@ class YFNF_Elementor_Widget extends \Elementor\Widget_Base {
         ?>
         <#
         var symbol = settings.symbol || 'AAPL';
-        var per_page = settings.per_page || 20;
+        var per_page = settings.per_page || 30;
         var style = settings.accordion_style || 'default';
         var content_mode = settings.content_mode || 'full';
         var show_read_more = settings.show_read_more || 'no';
