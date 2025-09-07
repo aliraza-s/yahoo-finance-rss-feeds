@@ -81,7 +81,7 @@ class YFNF_Elementor_Widget extends \Elementor\Widget_Base {
             [
                 'label' => __('Show Pagination', 'yahoo-finance-news'),
                 'type' => \Elementor\Controls_Manager::SWITCHER,
-                'default' => 'yes',
+                'default' => 'no',
                 'label_on' => __('Show', 'yahoo-finance-news'),
                 'label_off' => __('Hide', 'yahoo-finance-news'),
                 'description' => __('Enable pagination controls for multiple pages', 'yahoo-finance-news'),
@@ -1226,7 +1226,6 @@ class YFNF_Elementor_Widget extends \Elementor\Widget_Base {
                 <button class="yfnf-btn yfnf-prev" disabled>← Previous</button>
                 <span class="yfnf-page-info">Page 1 of 3</span>
                 <button class="yfnf-btn yfnf-next">Next →</button>
-                <button class="yfnf-btn yfnf-load-more">Load More</button>
             </div>
             <# } #>
             
