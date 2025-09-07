@@ -3,7 +3,7 @@
  * Plugin Name: Yahoo Finance News Feed
  * Plugin URI: https://alirazafreelancer.com/
  * Description: Dynamic news feed module using Yahoo Finance RSS feeds with accordion layout, pagination, and Elementor integration.
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: Mr. Developer
  * License: GPL v2 or later
  * Text Domain: yahoo-finance-news
@@ -226,21 +226,24 @@ class YahooFinanceNewsFeed {
         </div>
         <?php
     }
+
+public function shortcode_handler($atts) {
+    $options = get_option('yfnf_settings');
     
-    public function shortcode_handler($atts) {
-        $options = get_option('yfnf_settings');
-        
-        $atts = shortcode_atts(array(
-            'symbol' => isset($options['default_symbol']) ? $options['default_symbol'] : 'AAPL',
-            'per_page' => isset($options['per_page']) ? $options['per_page'] : 20,
-            'page' => 1,
-            'style' => isset($options['accordion_style']) ? $options['accordion_style'] : 'default',
-            'show_read_more' => isset($options['show_read_more']) ? $options['show_read_more'] : 'no',
-            'content_mode' => isset($options['content_length']) ? $options['content_length'] : 'full'
-        ), $atts);
-        
-        return $this->render_news_feed($atts);
-    }
+    $atts = shortcode_atts(array(
+        'symbol' => isset($options['default_symbol']) ? $options['default_symbol'] : 'AAPL',
+        'per_page' => isset($options['per_page']) ? $options['per_page'] : 20,
+        'page' => 1,
+        'style' => isset($options['accordion_style']) ? $options['accordion_style'] : 'default',
+        'show_read_more' => isset($options['show_read_more']) ? $options['show_read_more'] : 'no',
+        'content_mode' => isset($options['content_length']) ? $options['content_length'] : 'full',
+        'show_article_count' => isset($options['show_article_count']) ? $options['show_article_count'] : 'yes',
+        'show_source' => isset($options['show_source']) ? $options['show_source'] : 'yes',
+        'show_pagination' => 'yes' // Force pagination for shortcode
+    ), $atts);
+    
+    return $this->render_news_feed($atts);
+}
     
     public function render_news_feed($args) {
         $news_data = $this->get_news_data($args['symbol']);
@@ -312,30 +315,26 @@ class YahooFinanceNewsFeed {
                     </div>
                 <?php endforeach; ?>
             </div>
-            
-            <?php if ($total_pages > 1): ?>
-                <div class="yfnf-pagination">
-                    <?php if ($current_page > 1): ?>
-                        <button class="yfnf-btn yfnf-prev" data-page="<?php echo $current_page - 1; ?>">
-                            ← Previous
-                        </button>
-                    <?php endif; ?>
-                    
-                    <span class="yfnf-page-info">
-                        Page <?php echo $current_page; ?> of <?php echo $total_pages; ?>
-                    </span>
-                    
-                    <?php if ($current_page < $total_pages): ?>
-                        <button class="yfnf-btn yfnf-next" data-page="<?php echo $current_page + 1; ?>">
-                            Next →
-                        </button>
-                    <?php endif; ?>
-                    
-                    <button class="yfnf-btn yfnf-load-more">Load More</button>
-                </div>
-            <?php endif; ?>
-            
-            <div class="yfnf-loading" style="display: none;">
+<?php if ($show_pagination === 'yes' && $total_pages > 1): ?>
+    <div class="yfnf-pagination">
+        <?php if ($current_page > 1): ?>
+            <button class="yfnf-btn yfnf-prev" data-page="<?php echo $current_page - 1; ?>">
+                ← Previous
+            </button>
+        <?php endif; ?>
+        
+        <span class="yfnf-page-info">
+            Page <?php echo $current_page; ?> of <?php echo $total_pages; ?>
+        </span>
+        
+        <?php if ($current_page < $total_pages): ?>
+            <button class="yfnf-btn yfnf-next" data-page="<?php echo $current_page + 1; ?>">
+                Next →
+            </button>
+        <?php endif; ?>
+    </div>
+<?php endif; ?>
+<div class="yfnf-loading" style="display: none;">
                 <div class="yfnf-spinner"></div>
                 <span>Loading news...</span>
             </div>
@@ -407,18 +406,23 @@ class YahooFinanceNewsFeed {
         $items = $rss->get_items(0, 50); // Get up to 50 items
         
         foreach ($items as $item) {
-            $description = $item->get_description();
-            $full_content = $item->get_content();
-            
-            // If no full content available, try to fetch from the article page
-            if (empty($full_content) || strlen($full_content) < 500) {
-                $full_content = $this->fetch_article_content($item->get_link());
-            }
-            
-            // If still no content, use description
-            if (empty($full_content)) {
-                $full_content = $description;
-            }
+        $description = $item->get_description();
+        $full_content = $item->get_content();
+        
+        // If no full content available, try to fetch from the article page
+        if (empty($full_content) || strlen(strip_tags($full_content)) < 100) {
+            $full_content = $this->fetch_article_content($item->get_link());
+        }
+        
+        // If still no content, use description with a fallback message
+        if (empty($full_content) || strlen(strip_tags($full_content)) < 50) {
+            $full_content = $description;
+        }
+        
+        // Final fallback if everything is empty
+        if (empty($full_content) || strlen(strip_tags($full_content)) < 30) {
+            $full_content = '<p>Content not available for this article. <a href="' . esc_url($item->get_link()) . '" target="_blank">View original article</a></p>';
+        }
             
             $news_items[] = array(
                 'title' => $item->get_title(),

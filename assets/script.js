@@ -6,7 +6,6 @@ jQuery(document).ready(function ($) {
         settings: {
             animationSpeed: 300,
             autoRefreshInterval: 300000, // 5 minutes
-            loadMoreAnimation: true,
             singleAccordionMode: true
         },
 
@@ -115,19 +114,20 @@ jQuery(document).ready(function ($) {
 
                 var $btn = $(this);
                 var $container = $btn.closest('.yfnf-container');
+
+                // Skip if this is a load more button (shouldn't exist after our changes)
+                if ($btn.hasClass('yfnf-load-more')) return;
+
                 var page = $btn.data('page');
                 var symbol = $container.data('symbol');
                 var perPage = $container.data('per-page');
-                var isLoadMore = $btn.hasClass('yfnf-load-more');
                 var isPrev = $btn.hasClass('yfnf-prev');
                 var isNext = $btn.hasClass('yfnf-next');
 
                 if ($btn.prop('disabled') || $btn.hasClass('yfnf-loading')) return;
 
                 // Determine the page number based on button type
-                if (isLoadMore) {
-                    page = parseInt($container.data('current-page')) + 1;
-                } else if (isPrev) {
+                if (isPrev) {
                     page = parseInt($container.data('current-page')) - 1;
                 } else if (isNext) {
                     page = parseInt($container.data('current-page')) + 1;
@@ -135,11 +135,11 @@ jQuery(document).ready(function ($) {
 
                 if (!page || page < 1) return;
 
-                self.loadPage($container, symbol, page, perPage, isLoadMore);
+                self.loadPage($container, symbol, page, perPage);
             });
         },
 
-        loadPage: function ($container, symbol, page, perPage, isLoadMore) {
+        loadPage: function ($container, symbol, page, perPage) {
             var self = this;
             var $loading = $container.find('.yfnf-loading');
             var $pagination = $container.find('.yfnf-pagination');
@@ -154,6 +154,9 @@ jQuery(document).ready(function ($) {
             // Get container settings
             var showReadMore = $container.data('show-read-more') || 'no';
             var contentMode = $container.data('content-mode') || 'full';
+            var showArticleCount = $container.data('show-article-count') || 'yes';
+            var showSource = $container.data('show-source') || 'yes';
+            var showPagination = $container.data('show-pagination') || 'yes';
 
             $.ajax({
                 url: yfnf_ajax.ajax_url,
@@ -165,12 +168,15 @@ jQuery(document).ready(function ($) {
                     per_page: perPage,
                     show_read_more: showReadMore,
                     content_mode: contentMode,
+                    show_article_count: showArticleCount,
+                    show_source: showSource,
+                    show_pagination: showPagination,
                     nonce: yfnf_ajax.nonce
                 },
                 timeout: 15000,
                 success: function (response) {
                     if (response.success && response.data.html) {
-                        self.handleSuccessfulLoad($container, response.data.html, page, isLoadMore);
+                        self.handleSuccessfulLoad($container, response.data.html, page);
                     } else {
                         self.showError($container, response.data ? response.data.message : 'Failed to load news.');
                     }
@@ -194,72 +200,43 @@ jQuery(document).ready(function ($) {
             });
         },
 
-        handleSuccessfulLoad: function ($container, html, page, isLoadMore) {
+        handleSuccessfulLoad: function ($container, html, page) {
             var self = this;
             var $newContent = $(html);
 
-            if (isLoadMore) {
-                // Append new items with animation
-                var $newItems = $newContent.find('.yfnf-accordion-item');
-                var $accordion = $container.find('.yfnf-accordion');
+            // Replace entire content for pagination
+            var $currentAccordion = $container.find('.yfnf-accordion');
+            $currentAccordion.fadeOut(self.settings.animationSpeed, function () {
+                $container.html($newContent.html());
+                $container.find('.yfnf-accordion').hide().fadeIn(self.settings.animationSpeed);
 
-                if (self.settings.loadMoreAnimation) {
-                    $newItems.hide().appendTo($accordion).each(function (index) {
-                        var $item = $(this);
-                        setTimeout(function () {
-                            $item.fadeIn(self.settings.animationSpeed);
-                        }, index * 100);
-                    });
-                } else {
-                    $accordion.append($newItems);
-                }
+                // Update container data attributes from the new content
+                var newSymbol = $newContent.data('symbol');
+                var newPerPage = $newContent.data('per-page');
+                var newCurrentPage = $newContent.data('current-page');
+                var newTotalPages = $newContent.data('total-pages');
+                var newShowReadMore = $newContent.data('show-read-more');
+                var newContentMode = $newContent.data('content-mode');
 
-                // Update pagination
-                var $newPagination = $newContent.find('.yfnf-pagination');
-                if ($newPagination.length) {
-                    $container.find('.yfnf-pagination').replaceWith($newPagination);
-                } else {
-                    $container.find('.yfnf-pagination').fadeOut();
-                }
+                $container.data('symbol', newSymbol);
+                $container.data('per-page', newPerPage);
+                $container.data('current-page', newCurrentPage);
+                $container.data('total-pages', newTotalPages);
+                $container.data('show-read-more', newShowReadMore);
+                $container.data('content-mode', newContentMode);
 
-                // Update container data
-                $container.data('current-page', page);
-
-            } else {
-                // Replace entire content for regular pagination
-                var $currentAccordion = $container.find('.yfnf-accordion');
-                $currentAccordion.fadeOut(self.settings.animationSpeed, function () {
-                    $container.html($newContent.html());
-                    $container.find('.yfnf-accordion').hide().fadeIn(self.settings.animationSpeed);
-
-                    // Update container data attributes from the new content
-                    var newSymbol = $newContent.data('symbol');
-                    var newPerPage = $newContent.data('per-page');
-                    var newCurrentPage = $newContent.data('current-page');
-                    var newTotalPages = $newContent.data('total-pages');
-                    var newShowReadMore = $newContent.data('show-read-more');
-                    var newContentMode = $newContent.data('content-mode');
-
-                    $container.data('symbol', newSymbol);
-                    $container.data('per-page', newPerPage);
-                    $container.data('current-page', newCurrentPage);
-                    $container.data('total-pages', newTotalPages);
-                    $container.data('show-read-more', newShowReadMore);
-                    $container.data('content-mode', newContentMode);
-                });
+                // Trigger content loaded event
+                $(document).trigger('yfnf_content_loaded');
 
                 // Scroll to top
                 self.scrollToElement($container, -100);
-            }
-
-            // Trigger content loaded event
-            $(document).trigger('yfnf_content_loaded');
+            });
 
             // Track analytics
             self.trackEvent('page_load', {
                 symbol: $container.data('symbol'),
                 page: page,
-                load_type: isLoadMore ? 'load_more' : 'pagination',
+                load_type: 'pagination',
                 content_mode: $container.data('content-mode')
             });
         },

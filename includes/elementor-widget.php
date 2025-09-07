@@ -1045,14 +1045,14 @@ class YFNF_Elementor_Widget extends \Elementor\Widget_Base {
         // Prepare arguments with all settings
         $args = array(
             'symbol' => !empty($settings['symbol']) ? YFNF_Utils::sanitize_symbol($settings['symbol']) : 'AAPL',
-            'per_page' => !empty($settings['per_page']) ? absint($settings['per_page']) : 20,
-            'page' => 1,
+        'per_page' => !empty($settings['per_page']) ? absint($settings['per_page']) : 20,
+        'page' => 1,
             'style' => !empty($settings['accordion_style']) ? $settings['accordion_style'] : 'default',
             'show_source' => $settings['show_source'] === 'yes',
             'show_date' => $settings['show_date'] === 'yes',
             'show_pagination' => $settings['show_pagination'] === 'yes',
             'single_accordion' => $settings['single_accordion'] === 'yes',
-            'show_excerpt' => $settings['show_excerpt'] === 'yes',
+            'show_excerpt' => $settings['show_pagination'] === 'yes' ? 'yes' : 'no',
             'excerpt_length' => !empty($settings['excerpt_length']) ? absint($settings['excerpt_length']) : 100,
             'show_read_more' => $settings['show_read_more'] === 'yes' ? 'yes' : 'no',
             'content_mode' => !empty($settings['content_mode']) ? $settings['content_mode'] : 'full',
